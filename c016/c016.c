@@ -68,8 +68,10 @@ int hashCode ( tKey key ) {
 */
 
 void htInit ( tHTable* ptrht ) {
-
- solved = 0; /*v pripade reseni, smazte tento radek!*/
+    for(int i = 0; i < HTSIZE; i++)
+    {
+        (*ptrht)[i] = NULL;
+    }
 }
 
 /* TRP s explicitně zřetězenými synonymy.
@@ -80,8 +82,14 @@ void htInit ( tHTable* ptrht ) {
 */
 
 tHTItem* htSearch ( tHTable* ptrht, tKey key ) {
-
- solved = 0; /*v pripade reseni, smazte tento radek!*/
+    tHTItem* search = (*ptrht)[hashCode(key)];
+    while(search != NULL)
+    {
+        if(key == search->key)
+            return search;
+        search = search->ptrnext;
+    }
+    return search;
 }
 
 /* 
@@ -97,8 +105,21 @@ tHTItem* htSearch ( tHTable* ptrht, tKey key ) {
 **/
 
 void htInsert ( tHTable* ptrht, tKey key, tData data ) {
-
- solved = 0; /*v pripade reseni, smazte tento radek!*/
+    
+    tHTItem* search = htSearch(ptrht, key); // Search for the key in table
+    
+    if(search == NULL)  // If not found
+    {
+        tHTItem* new = malloc(sizeof(struct tHTItem));  // Create new item
+        new->key = key;
+        new->data = data;
+        new->ptrnext = (*ptrht)[hashCode(key)]; //  Link new item to first item in the list
+        (*ptrht)[hashCode(key)] = new;  // Add item to the front of the list
+    }
+    else    // Found same key in the table
+    {
+        search->data = data;    // Change data of existing item 
+    }
 }
 
 /*
@@ -111,8 +132,7 @@ void htInsert ( tHTable* ptrht, tKey key, tData data ) {
 */
 
 tData* htRead ( tHTable* ptrht, tKey key ) {
-
- solved = 0; /*v pripade reseni, smazte tento radek!*/
+    return &htSearch(ptrht, key)->data;
 }
 
 /*
@@ -126,8 +146,36 @@ tData* htRead ( tHTable* ptrht, tKey key ) {
 */
 
 void htDelete ( tHTable* ptrht, tKey key ) {
-
- solved = 0; /*v pripade reseni, smazte tento radek!*/
+    tHTItem* item = (*ptrht)[hashCode(key)];    // Get first item in the row
+    
+    if(item->key == key) // If it's the key we want (= It's the first one in the row)
+    {
+        if(item->ptrnext == NULL)   // There are is only one item in the row
+        {   
+            (*ptrht)[hashCode(key)] = NULL; // Set empty row
+        }
+        else    // There are some more items in the row
+        {
+            (*ptrht)[hashCode(key)] = item->ptrnext;    // Set new first item in the row
+        }
+        free(item); // Free allocated memory
+    }
+    else    // Searching in the list
+    {
+        tHTItem* prevItem;
+        while(item != NULL) // Search untill the end of the list
+        {  
+            if(item->key == key)    // If found the item to be deleted
+            {
+                prevItem->ptrnext = item->ptrnext;  // Maintain links in the list
+                free(item); // Free allocated memory
+                break;
+            }
+            
+            prevItem = item;    // Save previous item (used in this step)
+            item = item->ptrnext;   // Move to next item in the list
+        }
+    }
 }
 
 /* TRP s explicitně zřetězenými synonymy.
@@ -136,6 +184,16 @@ void htDelete ( tHTable* ptrht, tKey key ) {
 */
 
 void htClearAll ( tHTable* ptrht ) {
-
- solved = 0; /*v pripade reseni, smazte tento radek!*/
+    for(int i = 0; i < HTSIZE; i++) // For every row in table
+    {
+        tHTItem* item = (*ptrht)[i];
+        while(item != NULL)
+        {
+            // TO-DO not working
+            tHTItem* tmpItem = item;
+            free(item);
+            item = tmpItem->ptrnext;
+        }
+        (*ptrht)[i] = NULL;
+    }
 }
