@@ -57,11 +57,8 @@ void BSTInit (tBSTNodePtr *RootPtr) {
 ** Proto je třeba při přiřazení přes RootPtr použít dereferenční operátor *.
 ** Ten bude použit i ve funkcích BSTDelete, BSTInsert a BSTDispose.
 **/
-	
-	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
-	
+
+    *RootPtr = NULL;
 }	
 
 int BSTSearch (tBSTNodePtr RootPtr, char K, int *Content)	{
@@ -78,11 +75,24 @@ int BSTSearch (tBSTNodePtr RootPtr, char K, int *Content)	{
 ** problém řešte rekurzivním volání této funkce, přičemž nedeklarujte žádnou
 ** pomocnou funkci.
 **/
-							   
-	
-
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
-	
+                        
+    if(RootPtr != NULL)
+    {
+        if(RootPtr->Key == K)
+        {
+            *Content = RootPtr->BSTNodeCont;
+            return TRUE;
+        }
+        else
+        {
+            if(K < RootPtr->Key)
+                return BSTSearch(RootPtr->LPtr, K, Content);
+            else
+                return BSTSearch(RootPtr->RPtr, K, Content);
+        }
+    }
+    else
+        return FALSE;
 } 
 
 
@@ -102,11 +112,28 @@ void BSTInsert (tBSTNodePtr* RootPtr, char K, int Content)	{
 ** rychlosti, tak z hlediska paměťových nároků. Zde jde ale o školní
 ** příklad, na kterém si chceme ukázat eleganci rekurzivního zápisu.
 **/
-		
 	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
-	
+    if((*RootPtr) == NULL)    // Node is a leaf
+    {
+        *RootPtr = malloc(sizeof(struct tBSTNode));
+        (*RootPtr)->Key = K;
+        (*RootPtr)->BSTNodeCont = Content;
+        (*RootPtr)->LPtr = NULL;
+        (*RootPtr)->RPtr = NULL;
+        
+    }
+    else
+    {
+        if((*RootPtr)->Key == K)    // Found node with the same key
+            (*RootPtr)->BSTNodeCont = Content;  // Change node value
+        else
+        {
+            if(K < (*RootPtr)->Key)
+                BSTInsert(&((*RootPtr)->LPtr), K, Content);
+            else
+                BSTInsert(&((*RootPtr)->RPtr), K, Content);
+        }
+    }    
 }
 
 void ReplaceByRightmost (tBSTNodePtr PtrReplaced, tBSTNodePtr *RootPtr) {
@@ -121,11 +148,17 @@ void ReplaceByRightmost (tBSTNodePtr PtrReplaced, tBSTNodePtr *RootPtr) {
 ** Tato pomocná funkce bude použita dále. Než ji začnete implementovat,
 ** přečtěte si komentář k funkci BSTDelete(). 
 **/
-	
-	
-		
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
-	
+	// TO-DO!!!!
+	if(*RootPtr != NULL)
+    {
+        ReplaceByRightmost(PtrReplaced, &((*RootPtr)->RPtr));
+    }
+/*    else
+    {
+        tBSTNodePtr delete = *RootPtr;
+        PtrReplaced = *RootPtr;
+        free(delete);         
+    }*/
 }
 
 void BSTDelete (tBSTNodePtr *RootPtr, char K) 		{
@@ -140,10 +173,53 @@ void BSTDelete (tBSTNodePtr *RootPtr, char K) 		{
 ** Tuto funkci implementujte rekurzivně s využitím dříve deklarované
 ** pomocné funkce ReplaceByRightmost.
 **/
-	
-	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+/*
+	if(BSTSearch(*RootPtr, K, NULL) == FALSE) // Node with key not found
+        return; // Do nothing
+    */
+    
+	if(*RootPtr != NULL)
+    {
+        if((*RootPtr)->Key == K)    // This is the node about to be deleted
+        {
+            if(((*RootPtr)->LPtr == NULL && (*RootPtr)->RPtr != NULL))  // Node has only left subtree
+            {
+                //tBSTNodePtr delete = *RootPtr;
+                *RootPtr = (*RootPtr)->RPtr;
+                //free(delete); 
+            }
+            else
+            {
+                if((*RootPtr)->LPtr != NULL && (*RootPtr)->RPtr == NULL)    // Node has only rightsubtree
+                {
+                    //tBSTNodePtr delete = *RootPtr;
+                    *RootPtr = (*RootPtr)->LPtr;
+                    //free(delete); 
+                }
+                else
+                {
+                    if((*RootPtr)->LPtr != NULL && (*RootPtr)->RPtr != NULL)    // Node has both subtrees
+                    {
+                            ReplaceByRightmost(*RootPtr, &((*RootPtr)->LPtr));
+                    }
+                    else
+                    {
+                        // TO-DO
+                        //tBSTNodePtr delete = *RootPtr;
+                        *RootPtr = NULL;
+                        //free(delete);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if(K < (*RootPtr)->Key)
+                BSTDelete(&((*RootPtr)->LPtr), K);  // Continue to left
+            else
+                BSTDelete(&((*RootPtr)->RPtr), K);  // Continue to right
+        }
+    }
 
 } 
 
@@ -155,10 +231,12 @@ void BSTDispose (tBSTNodePtr *RootPtr) {
 ** inicializaci. Tuto funkci implementujte rekurzivně bez deklarování pomocné
 ** funkce.
 **/
-	
-
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
-
+    if(*RootPtr != NULL)
+    {
+        BSTDispose(&((*RootPtr)->LPtr));
+        BSTDispose(&((*RootPtr)->RPtr));
+        free(*RootPtr); // TO-DO: Seg fail
+    }
 }
 
 /* konec c401.c */
