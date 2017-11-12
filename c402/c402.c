@@ -182,11 +182,10 @@ void BTInit (tBTNodePtr *RootPtr)	{
 ** proto je třeba při práci s RootPtr použít dereferenční operátor *.
 **/
 	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	*RootPtr = NULL;	
 }
 
-void BTInsert (tBTNodePtr *RootPtr, int Content) {
+void BTInsert (tBTNodePtr *RootPtr, int Content) {	// TO-DO: Not working
 /*   --------
 ** Vloží do stromu nový uzel s hodnotou Content.
 **
@@ -196,10 +195,41 @@ void BTInsert (tBTNodePtr *RootPtr, int Content) {
 ** se ve stromu může vyskytnout nejvýše jednou). Pokud se vytváří nový uzel,
 ** vzniká vždy jako list stromu. Funkci implementujte nerekurzivně.
 **/
+
+	tBTNodePtr ParentPtr = NULL;
+	tBTNodePtr NextPtr = *RootPtr;
+
+	while(NextPtr != NULL && (NextPtr)->Cont != Content)
+	{
+		ParentPtr = NextPtr;	// Save pointer to parent node
+
+		if(Content < (NextPtr)->Cont)
+			NextPtr = (NextPtr)->LPtr;
+		else
+			NextPtr = (NextPtr)->RPtr;
+	}
 	
-	
-		
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	if(NextPtr == NULL)	// Node with same content not found
+	{
+		tBTNodePtr newNode = malloc(sizeof(struct tBTNode));
+        newNode->Cont = Content;
+        newNode->LPtr = NULL;
+        newNode->RPtr = NULL;
+        
+        
+        
+        if(ParentPtr != NULL)	// Avoiding Seg fail
+        {
+			if(Content < ParentPtr->Cont)
+				ParentPtr->LPtr = newNode;
+			else
+				ParentPtr->RPtr = newNode;
+		}
+		else	// This is the first node in tree
+		{
+			*RootPtr = newNode;	// Set as new root	
+		}
+	}
 }
 
 /*                                  PREORDER                                  */
@@ -212,9 +242,15 @@ void Leftmost_Preorder (tBTNodePtr ptr, tStackP *Stack)	{
 ** a ukazatele na ně is uložíme do zásobníku.
 **/
 
-	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	if(ptr != NULL)
+	{
+		while(ptr->LPtr != NULL)
+		{
+			BTWorkOut(ptr);
+			SPushP(Stack, ptr);
+			ptr = ptr->LPtr;
+		}	
+	}		
 }
 
 void BTPreorder (tBTNodePtr RootPtr)	{
@@ -239,23 +275,48 @@ void Leftmost_Inorder(tBTNodePtr ptr, tStackP *Stack)		{
 ** Při průchodu Inorder ukládáme ukazatele na všechny navštívené uzly do
 ** zásobníku. 
 **/
-	
-	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
-	
+	if(ptr != NULL)
+	{
+		while(ptr->LPtr != NULL)
+		{
+			SPushP(Stack, ptr);
+			ptr = ptr->LPtr;
+		}	
+	}
 }
 
-void BTInorder (tBTNodePtr RootPtr)	{
+ void BTInorder (tBTNodePtr RootPtr)	{
 /*   ---------
 ** Průchod stromem typu inorder implementovaný nerekurzivně s využitím funkce
 ** Leftmost_Inorder a zásobníku ukazatelů. Zpracování jednoho uzlu stromu
 ** realizujte jako volání funkce BTWorkOut(). 
 **/
-
+	
+	if(RootPtr == NULL) // If there is no tree
+		return;	// End function
+		
+	// Creating stack	
+	tStackP stack;
+	SInitP(&stack);
 	
 	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	Leftmost_Inorder(RootPtr, &stack);	// Find the most left node (push route in the stack)
+	
+	int dbg = 0;
+	while(!SEmptyP(&stack) && dbg < 5)	// While stack is not empty
+	{
+		dbg++;
+		printf("stack size: %d\n",stack.top);
+		tBTNodePtr current = STopPopP(&stack);	// Get top of the stack (the current node)
+		printf("top: %d\n",current->Cont);
+		
+		BTWorkOut(current);	// Print the node
+		
+		if(current->RPtr != NULL)	// If node has right subtree
+		{
+			Leftmost_Inorder(current, &stack);	// Find the most left node in the subtree (push route in the stack)
+		}
+	}	
 }
 
 /*                                 POSTORDER                                  */ 
@@ -269,9 +330,15 @@ void Leftmost_Postorder (tBTNodePtr ptr, tStackP *StackP, tStackB *StackB) {
 ** navštíven poprvé a že se tedy ještě nemá zpracovávat. 
 **/
 
-	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	if(ptr != NULL)
+	{
+		while(ptr->LPtr != NULL)
+		{
+			SPushP(StackP, ptr);
+			SPushB(StackB, 0);
+			ptr = ptr->LPtr;
+		}	
+	}
 }
 
 void BTPostorder (tBTNodePtr RootPtr)	{
@@ -292,11 +359,27 @@ void BTDisposeTree (tBTNodePtr *RootPtr)	{
 ** Zruší všechny uzly stromu a korektně uvolní jimi zabranou paměť.
 **
 ** Funkci implementujte nerekurzivně s využitím zásobníku ukazatelů.
-**/
+**/	
+	if(*RootPtr == NULL)
+		return;
 
+	tStackP stack;
+	SInitP(&stack);
 	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	/*
+	do
+	{
+		if((*RootPtr)->LPtr != NULL)
+			SPushP(&stack, (*RootPtr)->LPtr);
+		if((*RootPtr)->RPtr != NULL)
+			SPushP(&stack, (*RootPtr)->RPtr);
+			
+		if(!SEmptyP(&stack))
+			free(STopPopP(&stack));
+	}
+	while(!SEmptyP(&stack));
+	*/
+	BTInit(RootPtr);
 }
 
 /* konec c402.c */
