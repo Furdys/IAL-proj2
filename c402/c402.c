@@ -185,7 +185,7 @@ void BTInit (tBTNodePtr *RootPtr)	{
 	*RootPtr = NULL;	
 }
 
-void BTInsert (tBTNodePtr *RootPtr, int Content) {	// TO-DO: Not working
+void BTInsert (tBTNodePtr *RootPtr, int Content) {
 /*   --------
 ** Vloží do stromu nový uzel s hodnotou Content.
 **
@@ -244,7 +244,7 @@ void Leftmost_Preorder (tBTNodePtr ptr, tStackP *Stack)	{
 
 	if(ptr != NULL)
 	{
-		while(ptr->LPtr != NULL)
+		while(ptr != NULL)
 		{
 			BTWorkOut(ptr);
 			SPushP(Stack, ptr);
@@ -260,9 +260,24 @@ void BTPreorder (tBTNodePtr RootPtr)	{
 ** realizujte jako volání funkce BTWorkOut(). 
 **/
 
-	
-	
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	if(RootPtr == NULL) // If there is no tree
+		return;	// End function
+		
+	// Creating stack	
+	tStackP stack;
+	SInitP(&stack);	
+        
+        Leftmost_Preorder(RootPtr, &stack);	// Find the most left node (push the route in the stack and print visited)
+        
+	while(!SEmptyP(&stack))	// While stack is not empty
+	{
+		tBTNodePtr current = STopPopP(&stack);	// Get top of the stack (the current node)
+		
+		if(current->RPtr != NULL)	// If node has right subtree
+		{
+			Leftmost_Preorder(current->RPtr, &stack);	// Find the most left node in the subtree (push route in the stack and print visited)
+		}
+	}	
 }
 
 
@@ -277,7 +292,7 @@ void Leftmost_Inorder(tBTNodePtr ptr, tStackP *Stack)		{
 **/
 	if(ptr != NULL)
 	{
-		while(ptr->LPtr != NULL)
+		while(ptr != NULL)
 		{
 			SPushP(Stack, ptr);
 			ptr = ptr->LPtr;
@@ -302,19 +317,15 @@ void Leftmost_Inorder(tBTNodePtr ptr, tStackP *Stack)		{
 	
 	Leftmost_Inorder(RootPtr, &stack);	// Find the most left node (push route in the stack)
 	
-	int dbg = 0;
-	while(!SEmptyP(&stack) && dbg < 5)	// While stack is not empty
+	while(!SEmptyP(&stack))	// While stack is not empty
 	{
-		dbg++;
-		printf("stack size: %d\n",stack.top);
 		tBTNodePtr current = STopPopP(&stack);	// Get top of the stack (the current node)
-		printf("top: %d\n",current->Cont);
 		
 		BTWorkOut(current);	// Print the node
 		
 		if(current->RPtr != NULL)	// If node has right subtree
 		{
-			Leftmost_Inorder(current, &stack);	// Find the most left node in the subtree (push route in the stack)
+			Leftmost_Inorder(current->RPtr, &stack);	// Find the most left node in the subtree (push route in the stack)
 		}
 	}	
 }
@@ -332,10 +343,10 @@ void Leftmost_Postorder (tBTNodePtr ptr, tStackP *StackP, tStackB *StackB) {
 
 	if(ptr != NULL)
 	{
-		while(ptr->LPtr != NULL)
+		while(ptr != NULL)
 		{
 			SPushP(StackP, ptr);
-			SPushB(StackB, 0);
+			SPushB(StackB, 1);
 			ptr = ptr->LPtr;
 		}	
 	}
@@ -348,9 +359,38 @@ void BTPostorder (tBTNodePtr RootPtr)	{
 ** Zpracování jednoho uzlu stromu realizujte jako volání funkce BTWorkOut(). 
 **/
 
-	
+	if(RootPtr == NULL) // If there is no tree
+		return;	// End function
 		
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	// Creating pointer stack	
+	tStackP stackP;
+	SInitP(&stackP);	
+        
+        // Creating bool stack (true = printed)	
+	tStackB stackB;
+	SInitB(&stackB);
+        
+        Leftmost_Postorder(RootPtr, &stackP, &stackB);
+        
+        while(!SEmptyP(&stackP))	// While stack is not empty
+	{
+		tBTNodePtr currentP = STopPopP(&stackP);	// Get top of the stack (the current node)
+                bool currentB = STopPopB(&stackB);	// Get top of the stack (was the current node visited first time?)
+		
+		if(currentP->RPtr != NULL && currentB)	// If node has right subtree and is visited for the first time
+		{
+                        if(currentB)    // Visited for first time
+                        {
+                                SPushP(&stackP, currentP);      // Return node to the stack
+                                SPushB(&stackB, 0);
+                        }
+			Leftmost_Postorder(currentP->RPtr, &stackP, &stackB);	// Find the most left node in the subtree (push route in the stack)
+		}
+                else	// (If node has no right subtree -> It's a leaf) or it's visited for the second time
+                {
+                        BTWorkOut(currentP);    // Print content of the node
+                }
+	}	
 }
 
 
@@ -360,26 +400,29 @@ void BTDisposeTree (tBTNodePtr *RootPtr)	{
 **
 ** Funkci implementujte nerekurzivně s využitím zásobníku ukazatelů.
 **/	
-	if(*RootPtr == NULL)
-		return;
+	if(*RootPtr == NULL) // If there is no tree
+		return;	// End function
 
+        // Creating pointer stack
 	tStackP stack;
 	SInitP(&stack);
+        SPushP(&stack, *RootPtr);       // Push root node
+        
 	
-	/*
-	do
+	
+	while(!SEmptyP(&stack))        // While stack is not empty
 	{
-		if((*RootPtr)->LPtr != NULL)
-			SPushP(&stack, (*RootPtr)->LPtr);
-		if((*RootPtr)->RPtr != NULL)
-			SPushP(&stack, (*RootPtr)->RPtr);
+                tBTNodePtr current = STopPopP(&stack); // Get node from top of the stack (the current node)
+                
+		if(current->LPtr != NULL)       // If it has left subtree
+			SPushP(&stack, current->LPtr);  // Put it on the stack
+		if(current->RPtr != NULL)       // If it has right subtree
+			SPushP(&stack, current->RPtr);  // Put it on the stack
 			
-		if(!SEmptyP(&stack))
-			free(STopPopP(&stack));
+                free(current);  // Free the memory of current node
 	}
-	while(!SEmptyP(&stack));
-	*/
-	BTInit(RootPtr);
+	
+	BTInit(RootPtr);        // Reset default value of the tree (init)
 }
 
 /* konec c402.c */
