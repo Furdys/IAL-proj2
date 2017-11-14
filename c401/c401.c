@@ -148,17 +148,24 @@ void ReplaceByRightmost (tBSTNodePtr PtrReplaced, tBSTNodePtr *RootPtr) {
 ** Tato pomocná funkce bude použita dále. Než ji začnete implementovat,
 ** přečtěte si komentář k funkci BSTDelete(). 
 **/
-	// TO-DO!!!!
-	if(*RootPtr != NULL)
+
+	if((*RootPtr)->RPtr != NULL)
     {
         ReplaceByRightmost(PtrReplaced, &((*RootPtr)->RPtr));
     }
-/*    else
+    else
     {
-        tBSTNodePtr delete = *RootPtr;
-        PtrReplaced = *RootPtr;
-        free(delete);         
-    }*/
+        //printf("[DBG] Rightmost = %c\n",(*RootPtr)->Key);
+        //printf("[DBG] PtrReplaced = %c\n",PtrReplaced->Key);
+        // TO-DO: Error is probably here
+        
+        PtrReplaced->Key = (*RootPtr)->Key;
+        PtrReplaced->BSTNodeCont = (*RootPtr)->BSTNodeCont;
+        
+        free(*RootPtr);
+        *RootPtr = NULL;
+    }
+
 }
 
 void BSTDelete (tBSTNodePtr *RootPtr, char K) 		{
@@ -173,54 +180,40 @@ void BSTDelete (tBSTNodePtr *RootPtr, char K) 		{
 ** Tuto funkci implementujte rekurzivně s využitím dříve deklarované
 ** pomocné funkce ReplaceByRightmost.
 **/
-/*
-	if(BSTSearch(*RootPtr, K, NULL) == FALSE) // Node with key not found
-        return; // Do nothing
-    */
-    
-	if(*RootPtr != NULL)
+
+    if(*RootPtr == NULL)    // If tree is empty
+        return; // End function
+
+    if((*RootPtr)->Key != K) // This is not the node we want to delete
     {
-        if((*RootPtr)->Key == K)    // This is the node about to be deleted
-        {
-            if(((*RootPtr)->LPtr == NULL && (*RootPtr)->RPtr != NULL))  // Node has only left subtree
-            {
-                //tBSTNodePtr delete = *RootPtr;
-                *RootPtr = (*RootPtr)->RPtr;
-                //free(delete); 
-            }
-            else
-            {
-                if((*RootPtr)->LPtr != NULL && (*RootPtr)->RPtr == NULL)    // Node has only rightsubtree
-                {
-                    //tBSTNodePtr delete = *RootPtr;
-                    *RootPtr = (*RootPtr)->LPtr;
-                    //free(delete); 
-                }
-                else
-                {
-                    if((*RootPtr)->LPtr != NULL && (*RootPtr)->RPtr != NULL)    // Node has both subtrees
-                    {
-                            ReplaceByRightmost(*RootPtr, &((*RootPtr)->LPtr));
-                    }
-                    else
-                    {
-                        // TO-DO
-                        //tBSTNodePtr delete = *RootPtr;
-                        *RootPtr = NULL;
-                        //free(delete);
-                    }
-                }
-            }
-        }
+       if(K < (*RootPtr)->Key)
+            BSTDelete(&((*RootPtr)->LPtr), K);  // Continue to left
         else
+            BSTDelete(&((*RootPtr)->RPtr), K);  // Continue to right
+    }
+    else // This is the node we want to delete
+    {
+        if((*RootPtr)->LPtr == NULL && (*RootPtr)->RPtr == NULL)    // Node is a leaf
         {
-            if(K < (*RootPtr)->Key)
-                BSTDelete(&((*RootPtr)->LPtr), K);  // Continue to left
-            else
-                BSTDelete(&((*RootPtr)->RPtr), K);  // Continue to right
+            free(*RootPtr);
+            *RootPtr = NULL;
+        }
+        else if((*RootPtr)->LPtr != NULL && (*RootPtr)->RPtr != NULL)    // Node has both subtrees
+        {
+            ReplaceByRightmost(*RootPtr, &((*RootPtr)->LPtr));
+        }
+        else  // Node has only one subtree
+        {
+            tBSTNodePtr moving; // Node that is about to be moved
+            if((*RootPtr)->LPtr != NULL)    // Node has only left subtree
+                moving = (*RootPtr)->LPtr;
+            else    // Node has only right subtree
+                moving = (*RootPtr)->RPtr;
+                
+            free(*RootPtr);
+            *RootPtr = moving;
         }
     }
-
 } 
 
 void BSTDispose (tBSTNodePtr *RootPtr) {	
@@ -235,8 +228,10 @@ void BSTDispose (tBSTNodePtr *RootPtr) {
     {
         BSTDispose(&((*RootPtr)->LPtr));
         BSTDispose(&((*RootPtr)->RPtr));
-        free(*RootPtr); // TO-DO: Seg fail
+        free(*RootPtr);
     }
+    
+    BSTInit(RootPtr);
 }
 
 /* konec c401.c */
