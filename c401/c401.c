@@ -58,7 +58,15 @@ void BSTInit (tBSTNodePtr *RootPtr) {
 ** Ten bude použit i ve funkcích BSTDelete, BSTInsert a BSTDispose.
 **/
 
-    *RootPtr = NULL;
+    (*RootPtr) = NULL;
+    	
+ /*   (*RootPtr) = malloc(sizeof(struct tBSTNode));
+    (*RootPtr)->LPtr = NULL;
+    (*RootPtr)->RPtr = NULL;
+    //(*RootPtr)->Key = NULL;
+    //(*RootPtr)->BSTNodeCont = NULL;*/
+	// solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	
 }	
 
 int BSTSearch (tBSTNodePtr RootPtr, char K, int *Content)	{
@@ -75,24 +83,24 @@ int BSTSearch (tBSTNodePtr RootPtr, char K, int *Content)	{
 ** problém řešte rekurzivním volání této funkce, přičemž nedeklarujte žádnou
 ** pomocnou funkci.
 **/
-                        
-    if(RootPtr != NULL)
-    {
-        if(RootPtr->Key == K)
-        {
-            *Content = RootPtr->BSTNodeCont;
-            return TRUE;
-        }
-        else
-        {
-            if(K < RootPtr->Key)
-                return BSTSearch(RootPtr->LPtr, K, Content);
-            else
-                return BSTSearch(RootPtr->RPtr, K, Content);
-        }
-    }
-    else
+    int result;							   
+    if(RootPtr == NULL)
         return FALSE;
+    if(RootPtr->Key == K)
+    {
+        (*Content) = RootPtr->BSTNodeCont;
+        return TRUE;
+    }
+    else if(RootPtr->Key > K)
+        result = BSTSearch(RootPtr->LPtr, K, Content);
+    else
+        result = BSTSearch(RootPtr->RPtr, K, Content); 
+
+    return result;
+    
+
+	// solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	
 } 
 
 
@@ -113,28 +121,33 @@ void BSTInsert (tBSTNodePtr* RootPtr, char K, int Content)	{
 ** příklad, na kterém si chceme ukázat eleganci rekurzivního zápisu.
 **/
 	
-    if((*RootPtr) == NULL)    // Node is a leaf
+    if((*RootPtr) == NULL)
     {
-        *RootPtr = malloc(sizeof(struct tBSTNode));
+        (*RootPtr) = malloc(sizeof(struct tBSTNode));
         (*RootPtr)->Key = K;
         (*RootPtr)->BSTNodeCont = Content;
         (*RootPtr)->LPtr = NULL;
         (*RootPtr)->RPtr = NULL;
-        
+        return;
     }
-    else
+    if((*RootPtr)->Key == K)
     {
-        if((*RootPtr)->Key == K)    // Found node with the same key
-            (*RootPtr)->BSTNodeCont = Content;  // Change node value
-        else
-        {
-            if(K < (*RootPtr)->Key)
-                BSTInsert(&((*RootPtr)->LPtr), K, Content);
-            else
-                BSTInsert(&((*RootPtr)->RPtr), K, Content);
-        }
-    }    
+        (*RootPtr)->BSTNodeCont = Content;
+        return;
+    }
+    else if((*RootPtr)->Key > K)
+        BSTInsert(&(*RootPtr)->LPtr, K, Content);
+    else
+        BSTInsert(&(*RootPtr)->RPtr, K, Content); 
+    
+       	
+	
+	
+	// solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	
 }
+
+
 
 void ReplaceByRightmost (tBSTNodePtr PtrReplaced, tBSTNodePtr *RootPtr) {
 /*   ------------------
@@ -148,25 +161,27 @@ void ReplaceByRightmost (tBSTNodePtr PtrReplaced, tBSTNodePtr *RootPtr) {
 ** Tato pomocná funkce bude použita dále. Než ji začnete implementovat,
 ** přečtěte si komentář k funkci BSTDelete(). 
 **/
-
-	if((*RootPtr)->RPtr != NULL)
+	
+	if((*RootPtr)->RPtr == NULL)
     {
-        ReplaceByRightmost(PtrReplaced, &((*RootPtr)->RPtr));
-    }
+        PtrReplaced->Key = (*RootPtr)->Key;
+        PtrReplaced->BSTNodeCont = (*RootPtr)->BSTNodeCont; 
+        tBSTNodePtr tmp = (*RootPtr);
+        (*RootPtr) = (*RootPtr)->LPtr;
+        
+        
+        free((tmp));
+        (tmp) = NULL;
+	}
     else
     {
-        //printf("[DBG] Rightmost = %c\n",(*RootPtr)->Key);
-        //printf("[DBG] PtrReplaced = %c\n",PtrReplaced->Key);
-        // TO-DO: Error is probably here
-        
-        PtrReplaced->Key = (*RootPtr)->Key;
-        PtrReplaced->BSTNodeCont = (*RootPtr)->BSTNodeCont;
-        
-        free(*RootPtr);
-        *RootPtr = NULL;
-    }
+        ReplaceByRightmost(PtrReplaced, &(*RootPtr)->RPtr);
 
+    }
+    // solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+	
 }
+
 
 void BSTDelete (tBSTNodePtr *RootPtr, char K) 		{
 /*   ---------
@@ -181,39 +196,55 @@ void BSTDelete (tBSTNodePtr *RootPtr, char K) 		{
 ** pomocné funkce ReplaceByRightmost.
 **/
 
-    if(*RootPtr == NULL)    // If tree is empty
-        return; // End function
-
-    if((*RootPtr)->Key != K) // This is not the node we want to delete
+    
+    if((*RootPtr)->Key == K)
     {
-       if(K < (*RootPtr)->Key)
-            BSTDelete(&((*RootPtr)->LPtr), K);  // Continue to left
-        else
-            BSTDelete(&((*RootPtr)->RPtr), K);  // Continue to right
-    }
-    else // This is the node we want to delete
-    {
-        if((*RootPtr)->LPtr == NULL && (*RootPtr)->RPtr == NULL)    // Node is a leaf
+        if((*RootPtr)->LPtr == NULL && (*RootPtr)->RPtr != NULL)
         {
-            free(*RootPtr);
+            tBSTNodePtr tmp = (*RootPtr)->RPtr;
+            (*RootPtr)->Key = tmp->Key;
+            (*RootPtr)->BSTNodeCont = tmp->BSTNodeCont;
+            (*RootPtr)->LPtr = tmp->LPtr;
+            (*RootPtr)->RPtr = tmp->RPtr;
+            free(tmp);
+        }
+        
+        else if((*RootPtr)->RPtr == NULL && (*RootPtr)->LPtr != NULL)
+        {
+            tBSTNodePtr tmp = (*RootPtr)->LPtr;
+            (*RootPtr)->Key = tmp->Key;
+            (*RootPtr)->BSTNodeCont = tmp->BSTNodeCont;
+            (*RootPtr)->LPtr = tmp->LPtr;
+            (*RootPtr)->RPtr = tmp->RPtr;
+            free(tmp);
+ 
+        }
+
+        else if((*RootPtr)->LPtr != NULL && (*RootPtr)->RPtr != NULL)
+        {
+            ReplaceByRightmost((*RootPtr), &(*RootPtr)->LPtr);
+        }
+
+        else
+        {
+            free((*RootPtr));
             *RootPtr = NULL;
         }
-        else if((*RootPtr)->LPtr != NULL && (*RootPtr)->RPtr != NULL)    // Node has both subtrees
-        {
-            ReplaceByRightmost(*RootPtr, &((*RootPtr)->LPtr));
-        }
-        else  // Node has only one subtree
-        {
-            tBSTNodePtr moving; // Node that is about to be moved
-            if((*RootPtr)->LPtr != NULL)    // Node has only left subtree
-                moving = (*RootPtr)->LPtr;
-            else    // Node has only right subtree
-                moving = (*RootPtr)->RPtr;
-                
-            free(*RootPtr);
-            *RootPtr = moving;
-        }
+    
     }
+    else if((*RootPtr)->Key > K)
+    {
+        if((*RootPtr)->LPtr != NULL)
+            BSTDelete(&(*RootPtr)->LPtr, K);
+    }
+    else
+    {
+        if((*RootPtr)->RPtr != NULL)
+            BSTDelete(&(*RootPtr)->RPtr, K);
+    }
+	
+	 //solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+
 } 
 
 void BSTDispose (tBSTNodePtr *RootPtr) {	
@@ -224,14 +255,18 @@ void BSTDispose (tBSTNodePtr *RootPtr) {
 ** inicializaci. Tuto funkci implementujte rekurzivně bez deklarování pomocné
 ** funkce.
 **/
-    if(*RootPtr != NULL)
+    if((*RootPtr) != NULL)
     {
-        BSTDispose(&((*RootPtr)->LPtr));
-        BSTDispose(&((*RootPtr)->RPtr));
-        free(*RootPtr);
+	    if(&(*RootPtr)->RPtr != NULL)
+            BSTDispose(&(*RootPtr)->RPtr);
+        if((*RootPtr)->LPtr != NULL)
+            BSTDispose(&(*RootPtr)->LPtr);
+        free((*RootPtr));
     }
-    
     BSTInit(RootPtr);
+
+	 //solved = FALSE;		  /* V případě řešení smažte tento řádek! */	
+
 }
 
 /* konec c401.c */
