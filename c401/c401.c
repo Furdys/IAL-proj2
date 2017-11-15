@@ -149,21 +149,19 @@ void ReplaceByRightmost (tBSTNodePtr PtrReplaced, tBSTNodePtr *RootPtr) {
 ** přečtěte si komentář k funkci BSTDelete(). 
 **/
 
-	if((*RootPtr)->RPtr != NULL)
+	if((*RootPtr)->RPtr != NULL)    // While there is a right subtree
     {
-        ReplaceByRightmost(PtrReplaced, &((*RootPtr)->RPtr));
+        ReplaceByRightmost(PtrReplaced, &((*RootPtr)->RPtr));   // Repeat function for the right subtree
     }
-    else
+    else    // Found the right most node
     {
-        //printf("[DBG] Rightmost = %c\n",(*RootPtr)->Key);
-        //printf("[DBG] PtrReplaced = %c\n",PtrReplaced->Key);
-        // TO-DO: Error is probably here
-        
+        // Set values to replaced node
         PtrReplaced->Key = (*RootPtr)->Key;
         PtrReplaced->BSTNodeCont = (*RootPtr)->BSTNodeCont;
         
-        free(*RootPtr);
-        *RootPtr = NULL;
+        tBSTNodePtr next = (*RootPtr)->LPtr;    // Backup left subtree of deleted node
+        free(*RootPtr); // Free memory of the deleted node
+        *RootPtr = next;    // Replace deleted node with its left subtree
     }
 
 }
