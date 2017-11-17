@@ -399,7 +399,7 @@ void BTDisposeTree (tBTNodePtr *RootPtr)	{
 ** Zruší všechny uzly stromu a korektně uvolní jimi zabranou paměť.
 **
 ** Funkci implementujte nerekurzivně s využitím zásobníku ukazatelů.
-**/	
+**/
 	if(*RootPtr == NULL) // If there is no tree
 		return;	// End function
 
