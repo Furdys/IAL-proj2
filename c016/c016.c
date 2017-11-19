@@ -132,7 +132,13 @@ void htInsert ( tHTable* ptrht, tKey key, tData data ) {
 */
 
 tData* htRead ( tHTable* ptrht, tKey key ) {
-    return &htSearch(ptrht, key)->data;
+	
+	tHTItem* searched = htSearch(ptrht, key);	// Search for item
+	
+	if(searched == NULL)	// If not found
+		return NULL;
+	else	// If found
+		return &htSearch(ptrht, key)->data;	// Return data of the item
 }
 
 /*
@@ -147,6 +153,9 @@ tData* htRead ( tHTable* ptrht, tKey key ) {
 
 void htDelete ( tHTable* ptrht, tKey key ) {
     tHTItem* item = (*ptrht)[hashCode(key)];    // Get first item in the row
+    
+    if(item == NULL)	//	If there are no items in the row
+		return; // End function (Avoid segmentation fail)
     
     if(item->key == key) // If it's the key we want (= It's the first one in the row)
     {
